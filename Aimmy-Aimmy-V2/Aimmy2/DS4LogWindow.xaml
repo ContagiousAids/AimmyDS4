@@ -1,0 +1,12 @@
+<Window x:Class="Aimmy2.DS4LogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="DS4 UDP Log" Height="360" Width="520">
+    <DockPanel>
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="6">
+            <Button Name="BtnClear" Width="80" Margin="0,0,6,0" Click="BtnClear_Click">Clear</Button>
+            <Button Name="BtnClose" Width="80" Click="BtnClose_Click">Close</Button>
+        </StackPanel>
+        <ListBox Name="LstLog" FontFamily="Consolas" Margin="6"/>
+    </DockPanel>
+</Window>
