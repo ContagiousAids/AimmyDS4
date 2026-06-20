@@ -1,18 +1,12 @@
-using System;
-using System.Collections.Generic;
+using Gma.System.MouseKeyHook;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using Gma.System.MouseKeyHook;
-
-// Use explicit aliases to stop the "Ambiguous Reference" errors
-using WinForms = System.Windows.Forms;
-using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
-using MouseEventArgs = System.Windows.Forms.MouseEventArgs;
+using System.Collections.Generic;
+using System;
 
 namespace InputLogic
 {
     internal class InputBindingManager
-        
     {
         private IKeyboardMouseEvents? _mEvents;
         private readonly Dictionary<string, string> bindings = new();
@@ -45,10 +39,10 @@ namespace InputLogic
             if (_mEvents == null)
             {
                 _mEvents = Hook.GlobalEvents();
-                _mEvents.KeyDown += GlobalHookKeyDown!;
-                _mEvents.MouseDown += GlobalHookMouseDown!;
-                _mEvents.KeyUp += GlobalHookKeyUp!;
-                _mEvents.MouseUp += GlobalHookMouseUp!;
+                _mEvents.KeyDown += (s, e) => GlobalHookKeyDown(e);
+                _mEvents.MouseDown += (s, e) => GlobalHookMouseDown(e);
+                _mEvents.KeyUp += (s, e) => GlobalHookKeyUp(e);
+                _mEvents.MouseUp += (s, e) => GlobalHookMouseUp(e);
             }
 
             if (!_gamepadPollerStarted)
@@ -58,56 +52,44 @@ namespace InputLogic
             }
         }
 
-        private void GlobalHookKeyDown(object sender, KeyEventArgs e)
+        private void GlobalHookKeyDown(System.Windows.Forms.KeyEventArgs e)
         {
+            string key = e.KeyCode.ToString();
             if (settingBindingId != null) {
-                bindings[settingBindingId] = e.KeyCode.ToString();
-                OnBindingSet?.Invoke(settingBindingId, e.KeyCode.ToString());
+                bindings[settingBindingId] = key;
+                OnBindingSet?.Invoke(settingBindingId, key);
                 settingBindingId = null;
             } else {
-                foreach (var binding in bindings) {
-                    if (binding.Value == e.KeyCode.ToString()) {
-                        isHolding[binding.Key] = true;
-                        OnBindingPressed?.Invoke(binding.Key);
-                    }
+                foreach (var b in bindings) {
+                    if (b.Value == key) { isHolding[b.Key] = true; OnBindingPressed?.Invoke(b.Key); }
                 }
             }
         }
 
-        private void GlobalHookMouseDown(object sender, MouseEventArgs e)
+        private void GlobalHookMouseDown(System.Windows.Forms.MouseEventArgs e)
         {
+            string btn = e.Button.ToString();
             if (settingBindingId != null) {
-                bindings[settingBindingId] = e.Button.ToString();
-                OnBindingSet?.Invoke(settingBindingId, e.Button.ToString());
+                bindings[settingBindingId] = btn;
+                OnBindingSet?.Invoke(settingBindingId, btn);
                 settingBindingId = null;
             } else {
-                foreach (var binding in bindings) {
-                    if (binding.Value == e.Button.ToString()) {
-                        isHolding[binding.Key] = true;
-                        OnBindingPressed?.Invoke(binding.Key);
-                    }
+                foreach (var b in bindings) {
+                    if (b.Value == btn) { isHolding[b.Key] = true; OnBindingPressed?.Invoke(b.Key); }
                 }
             }
         }
 
-        private void GlobalHookKeyUp(object sender, KeyEventArgs e)
+        private void GlobalHookKeyUp(System.Windows.Forms.KeyEventArgs e)
         {
-            foreach (var binding in bindings) {
-                if (binding.Value == e.KeyCode.ToString()) {
-                    isHolding[binding.Key] = false;
-                    OnBindingReleased?.Invoke(binding.Key);
-                }
-            }
+            string key = e.KeyCode.ToString();
+            foreach (var b in bindings) { if (b.Value == key) { isHolding[b.Key] = false; OnBindingReleased?.Invoke(b.Key); } }
         }
 
-        private void GlobalHookMouseUp(object sender, MouseEventArgs e)
+        private void GlobalHookMouseUp(System.Windows.Forms.MouseEventArgs e)
         {
-            foreach (var binding in bindings) {
-                if (binding.Value == e.Button.ToString()) {
-                    isHolding[binding.Key] = false;
-                    OnBindingReleased?.Invoke(binding.Key);
-                }
-            }
+            string btn = e.Button.ToString();
+            foreach (var b in bindings) { if (b.Value == btn) { isHolding[b.Key] = false; OnBindingReleased?.Invoke(b.Key); } }
         }
 
         private void HandleGamepadButtonState(string buttonName, bool pressed)
@@ -138,7 +120,6 @@ namespace InputLogic
             {
                 var xinput = new XInput();
                 if (!xinput.IsAvailable) return;
-
                 var lastStates = new Dictionary<string, bool>();
                 string[] buttonNames = { "A", "B", "X", "Y", "LB", "RB", "LT", "RT", "LS", "RS", "Start", "Back", "Up", "Down", "Left", "Right" };
                 foreach (var btn in buttonNames) lastStates[btn] = false;
@@ -149,7 +130,6 @@ namespace InputLogic
                     {
                         var currentStates = new Dictionary<string, bool>();
                         foreach (var btn in buttonNames) currentStates[btn] = false;
-
                         for (int i = 0; i < 4; i++)
                         {
                             if (xinput.GetState(i, out var state) == 0)
@@ -173,7 +153,6 @@ namespace InputLogic
                                 currentStates["RT"] |= state.Gamepad.bRightTrigger > 50;
                             }
                         }
-
                         foreach (var btn in buttonNames)
                         {
                             if (currentStates[btn] != lastStates[btn])
@@ -192,25 +171,13 @@ namespace InputLogic
         private class XInput
         {
             [StructLayout(LayoutKind.Sequential)]
-            public struct XINPUT_GAMEPAD {
-                public ushort wButtons;
-                public byte bLeftTrigger;
-                public byte bRightTrigger;
-                public short sThumbLX; public short sThumbLY;
-                public short sThumbRX; public short sThumbRY;
-            }
-
+            public struct XINPUT_GAMEPAD { public ushort wButtons; public byte bLeftTrigger; public byte bRightTrigger; public short sThumbLX; public short sThumbLY; public short sThumbRX; public short sThumbRY; }
             [StructLayout(LayoutKind.Sequential)]
-            public struct XINPUT_STATE {
-                public uint dwPacketNumber;
-                public XINPUT_GAMEPAD Gamepad;
-            }
-
+            public struct XINPUT_STATE { public uint dwPacketNumber; public XINPUT_GAMEPAD Gamepad; }
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             private delegate int XInputGetStateDelegate(int dwUserIndex, out XINPUT_STATE pState);
             private readonly XInputGetStateDelegate? _getState;
             public bool IsAvailable => _getState != null;
-
             public XInput() {
                 IntPtr handle = LoadLibrary("xinput1_4.dll");
                 if (handle == IntPtr.Zero) handle = LoadLibrary("xinput1_3.dll");
@@ -219,12 +186,10 @@ namespace InputLogic
                     if (proc != IntPtr.Zero) _getState = Marshal.GetDelegateForFunctionPointer<XInputGetStateDelegate>(proc);
                 }
             }
-
             public int GetState(int userIndex, out XINPUT_STATE state) {
                 if (_getState != null) return _getState(userIndex, out state);
                 state = default; return -1;
             }
-
             [DllImport("kernel32.dll")] private static extern IntPtr LoadLibrary(string lpFileName);
             [DllImport("kernel32.dll")] private static extern IntPtr GetProcAddress(IntPtr hModule, string lpProcName);
         }
