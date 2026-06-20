@@ -1,4 +1,4 @@
-﻿using Aimmy2.AILogic;
+using Aimmy2.AILogic;
 using Aimmy2.Class;
 using Aimmy2.MouseMovementLibraries.GHubSupport;
 using Aimmy2.UILibrary;
@@ -339,6 +339,14 @@ namespace Aimmy2.Controls
                 {
                     uiManager.S_ControllerSensY = s;
                 }, tooltip: "Vertical stick sensitivity. 0.50 = default, higher = faster aim.")
+                .AddSlider("Controller Stick Smoothing", "Smoothing", 0.01, 0.05, 0.00, 0.95, s =>
+                {
+                    uiManager.S_ControllerSmoothing = s;
+                }, tooltip: "Reduces jittery movements. Higher = smoother aim but slight input delay.")
+                .AddSlider("Controller Target Friction", "Friction", 0.01, 0.05, 0.00, 1.00, s =>
+                {
+                    uiManager.S_ControllerFriction = s;
+                }, tooltip: "Slows down sensitivity when near a target to help you stick to it.")
                 .AddSlider("Controller Inner Deadzone", "Inner", 0.01, 0.01, 0.00, 0.50, s =>
                 {
                     uiManager.S_ControllerInnerDeadzone = s;
@@ -453,11 +461,17 @@ namespace Aimmy2.Controls
                 // Show/hide the controller settings panel
                 ControllerSettingsPanel.Visibility = isDS4W ? Visibility.Visible : Visibility.Collapsed;
 
-                // When using DS4, hide mouse-specific sliders to avoid confusion
+                // Toggle visibility of mouse vs controller sections
                 if (ui != null)
                 {
+                    // Sections to hide when in DS4W mode
+                    if (ui.AT_AimConfig != null) ui.AT_AimConfig.Visibility = isDS4W ? Visibility.Collapsed : Visibility.Visible;
+                    if (AimConfigPanel != null) AimConfigPanel.Visibility = isDS4W ? Visibility.Collapsed : Visibility.Visible;
+                    
+                    // Specific mouse sliders if they are in other panels
                     if (ui.S_MouseSensitivity != null) ui.S_MouseSensitivity.Visibility = isDS4W ? Visibility.Collapsed : Visibility.Visible;
                     if (ui.S_MouseJitter != null) ui.S_MouseJitter.Visibility = isDS4W ? Visibility.Collapsed : Visibility.Visible;
+                    if (ui.T_EMASmoothing != null) ui.T_EMASmoothing.Visibility = isDS4W ? Visibility.Collapsed : Visibility.Visible;
                     if (ui.S_EMASmoothing != null) ui.S_EMASmoothing.Visibility = isDS4W ? Visibility.Collapsed : Visibility.Visible;
                 }
 
