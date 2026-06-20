@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net8.0-windows</TargetFramework>
@@ -57,12 +56,15 @@
 		<Content Include="NLog.config">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
+		<Content Include="Changelog.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 	</ItemGroup>
 
 	<ItemGroup>
 		<Resource Include="Resources\**\*.png" />
 		<Resource Include="Resources\**\*.ico" />
+		<Resource Include="Resources\**\*.PNG" />
 		<Resource Include="DS4Forms\Themes\*.xaml" />
 	</ItemGroup>
-
 </Project>
