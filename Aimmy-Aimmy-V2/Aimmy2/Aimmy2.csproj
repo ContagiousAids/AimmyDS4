@@ -1,142 +1,147 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+using Visuality;
+using System.Collections.ObjectModel;
 
-  <PropertyGroup Label="Globals" Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <Microsoft_AI_DirectML_SkipDebugLayerCopy>True</Microsoft_AI_DirectML_SkipDebugLayerCopy>
-    <Microsoft_AI_DirectML_SkipLibraryCopy>False</Microsoft_AI_DirectML_SkipLibraryCopy>
-  </PropertyGroup>
+namespace Aimmy2.Class
+{
+    public static class Dictionary
+    {
+        public static string lastLoadedModel = "N/A";
+        public static string lastLoadedConfig = "N/A";
+        public static DetectedPlayerWindow? DetectedPlayerOverlay;
+        public static FOV? FOVWindow;
 
-  <PropertyGroup Label="Globals" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <Microsoft_AI_DirectML_SkipDebugLayerCopy>True</Microsoft_AI_DirectML_SkipDebugLayerCopy>
-    <Microsoft_AI_DirectML_SkipLibraryCopy>False</Microsoft_AI_DirectML_SkipLibraryCopy>
-  </PropertyGroup>
+        public static Dictionary<string, dynamic> bindingSettings = new()
+        {
+            { "Aim Keybind", "Unbound"},
+            { "Second Aim Keybind", "Unbound"},
+            { "Dynamic FOV Keybind", "Unbound"},
+            { "Emergency Stop Keybind", "Unbound"},
+            { "Model Switch Keybind", "Unbound"},
+            { "DS4 Aim Button", "Unbound" },
+            { "DS4 Second Aim Button", "Unbound" }
+        };
 
-  <PropertyGroup Label="Globals" Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <Microsoft_AI_DirectML_SkipDebugLayerCopy>True</Microsoft_AI_DirectML_SkipDebugLayerCopy>
-    <Microsoft_AI_DirectML_SkipLibraryCopy>False</Microsoft_AI_DirectML_SkipLibraryCopy>
-  </PropertyGroup>
+        public static Dictionary<string, dynamic> sliderSettings = new()
+        {
+            { "Suggested Model", ""},
+            { "AI FPS Limit", 0 },
+            { "FOV Size", 640 },
+            { "Dynamic FOV Size", 200 },
+            { "Mouse Sensitivity (+/-)", 0.80 },
+            { "Mouse Jitter", 4 },
+            { "Sticky Aim Threshold", 50 },
+            { "Y Offset (Up/Down)", 0 },
+            { "Y Offset (%)", 50 },
+            { "X Offset (Left/Right)", 0 },
+            { "X Offset (%)", 50 },
+            { "EMA Smoothening", 0.5},
+            { "Kalman Lead Time", 0.10 },
+            { "WiseTheFox Lead Time", 0.15 },
+            { "Shalloe Lead Multiplier", 3.0 },
+            { "Auto Trigger Delay", 0.1 },
+            { "AI Minimum Confidence", 45 },
+            { "AI Confidence Font Size", 20 },
+            { "Corner Radius", 0 },
+            { "Border Thickness", 1 },
+            { "Opacity", 1 },
+            // Controller (DS4Windows) Settings
+            { "Controller Stick Sensitivity X", 0.50 },
+            { "Controller Stick Sensitivity Y", 0.50 },
+            { "Controller Stick Smoothing", 0.50 },
+            { "Controller Target Friction", 0.20 },
+            { "Controller Inner Deadzone", 0.05 },
+            { "Controller Outer Deadzone", 0.95 },
+            { "Controller Anti-Recoil Strength", 0.00 },
+            { "Controller Minimum Output", 0.10 }
+            ,
+            // DS4 UDP network settings
+            { "DS4 UDP Port", 26760 },
+            { "DS4 UDP Client ID", 1 }
+        };
 
-  <PropertyGroup Label="Globals" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <Microsoft_AI_DirectML_SkipDebugLayerCopy>True</Microsoft_AI_DirectML_SkipDebugLayerCopy>
-    <Microsoft_AI_DirectML_SkipLibraryCopy>False</Microsoft_AI_DirectML_SkipLibraryCopy>
-  </PropertyGroup>
+        // Make sure the Settings Name is the EXACT Same as the Toggle Name or I will smack you :joeangy:
+        // nori
+        public static Dictionary<string, dynamic> toggleState = new()
+        {
+            { "Aim Assist", false },
+            { "Sticky Aim", false },
+            { "Constant AI Tracking", false },
+            { "Predictions", false },
+            { "EMA Smoothening", false },
+            { "Enable Model Switch Keybind", true },
+            { "Auto Trigger", false },
+            { "FOV", false },
+            { "Dynamic FOV", false },
+            { "Third Person Support", false },
+            { "Masking", false },
+            { "Show Detected Player", false },
+            { "Cursor Check", false },
+            { "Spray Mode", false },
+            //{ "Only When Held", false },
+            { "Show FOV", true },
+            { "Show AI Confidence", false },
+            { "Show Tracers", false },
+            { "Collect Data While Playing", false },
+            { "Auto Label Data", false },
+            { "LG HUB Mouse Movement", false },
+            { "Mouse Background Effect", true },
+            { "Debug Mode", false },
+            { "UI TopMost", false },
+            // DS4 UDP
+            { "DS4 UDP Enabled", true },
+            // DS4 UDP options
+            { "DS4 UDP Use CRC", true },
+            //--
+            { "StreamGuard", false },
+            //--
+            { "X Axis Percentage Adjustment", false },
+            { "Y Axis Percentage Adjustment", false }
+        };
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
-    <UseWindowsForms>false</UseWindowsForms>
-    <Platforms>AnyCPU;x64</Platforms>	  <Product></Product>
-    <Title></Title>
-    <AssemblyName>YmmiaV2</AssemblyName>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <SignAssembly>False</SignAssembly>
-    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-  
-  </PropertyGroup>
+        public static Dictionary<string, dynamic> minimizeState = new()
+        {
+            { "Aim Assist", false },
+            { "Aim Config", false },
+            { "Controller Settings", false },
+            { "Predictions", false },
+            { "Auto Trigger", false },
+            { "FOV Config", false },
+            { "ESP Config", false },
+            { "Model Settings", false },
+            { "Settings Menu", false },
+            { "X/Y Percentage Adjustment", false },
+            { "Theme Settings", false },
+            { "Screen Settings", false}
+        };
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <Optimize>False</Optimize>
-    <DebugType>none</DebugType>
-  </PropertyGroup>
+        public static Dictionary<string, dynamic> dropdownState = new()
+        {
+            { "Prediction Method", "Kalman Filter" },
+            { "Detection Area Type", "Closest to Center Screen" },
+            { "Aiming Boundaries Alignment", "Center" },
+            { "Mouse Movement Method", "Mouse Event" },
+            { "Screen Capture Method", "DirectX" },
+            { "Tracer Position", "Bottom" },
+            { "Movement Path", "Cubic Bezier" },
+            { "Image Size", "640" },
+            { "Target Class", "Best Confidence" }
+        };
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <Optimize>False</Optimize>
-    <DebugType>none</DebugType>
-  </PropertyGroup>
+        public static Dictionary<string, dynamic> colorState = new()
+        {
+            { "FOV Color", "#FF8080FF"},
+            { "Detected Player Color", "#FF00FFFF"},
+            { "Theme Color", "#FF722ED1" }
+        };
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DebugType>none</DebugType>
-  </PropertyGroup>
+        public static Dictionary<string, dynamic> filelocationState = new()
+        {
+            { "ddxoft DLL Location", ""}
+            , { "DS4 UDP IP", "127.0.0.1" }
+            , { "DS4 Last Send", "Idle" }
+        };
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <DebugType>none</DebugType>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <None Include="..\.editorconfig" Link=".editorconfig" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="AntWpf" Version="1.0.5" />
-    <PackageReference Include="Costura.Fody" Version="6.0.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Fody" Version="6.9.3">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.23.0" />
-    <PackageReference Include="MouseKeyHook" Version="5.7.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="Supercluster.KDTree" Version="1.0.4" />
-    <PackageReference Include="System.Management" Version="10.0.2" />
-    <PackageReference Include="System.Net.Http" Version="4.3.4" />
-    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-    <PackageReference Include="Vortice.Direct3D11" Version="3.8.2" />
-    <PackageReference Include="Vortice.Direct3D12" Version="3.8.2" />
-    <PackageReference Include="Vortice.DirectX" Version="3.8.2" />
-    <PackageReference Include="Vortice.DXGI" Version="3.8.2" />
-    <PackageReference Include="XamlRadialProgressBar" Version="1.0.3" />
-  </ItemGroup>
-
-	<ItemGroup>
-		<Resource Include="Graphics\Fonts\akony.otf" />
-		<Resource Include="Graphics\Fonts\AtkinsonHyperlegible-Bold.ttf" />
-		<Resource Include="Graphics\Fonts\AtkinsonHyperlegible-BoldItalic.ttf" />
-		<Resource Include="Graphics\Fonts\AtkinsonHyperlegible-Italic.ttf" />
-		<Resource Include="Graphics\Fonts\AtkinsonHyperlegible-Regular.ttf" />
-		<Resource Include="Graphics\Fonts\Font Awesome 6 Free-Regular-400.otf" />
-		<Resource Include="Graphics\Fonts\Font Awesome 6 Free-Solid-900.otf" />
-		<Resource Include="Graphics\Fonts\Font Awesome 6 Brands-Regular-400.otf" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Compile Update="Other\ThemeManager.cs">
-	    <Generator>MSBuild:Compile</Generator>
-	  </Compile>
-	  <Compile Update="Properties\Settings.Designer.cs">
-	    <DesignTimeSharedInput>True</DesignTimeSharedInput>
-	    <AutoGen>True</AutoGen>
-	    <DependentUpon>Settings.settings</DependentUpon>
-	  </Compile>
-	  <Compile Update="Other\StreamGuardManager.cs">
-	    <Generator>MSBuild:Compile</Generator>
-	  </Compile>
-	  <Compile Update="UILibrary\AFileLocator.xaml.cs">
-	    <SubType>Code</SubType>
-	  </Compile>
-	  <Compile Update="UILibrary\ASpacer.xaml.cs">
-	    <SubType>Code</SubType>
-	  </Compile>
-	  <Compile Update="UILibrary\ASlider.xaml.cs">
-	    <SubType>Code</SubType>
-	  </Compile>
-	  <Compile Update="UILibrary\AColorChanger.xaml.cs">
-	    <SubType>Code</SubType>
-	  </Compile>
-	  <Compile Update="UILibrary\AKeyChanger.xaml.cs">
-	    <SubType>Code</SubType>
-	  </Compile>
-	  <Compile Update="UILibrary\ARectangleBottom.xaml.cs">
-	    <SubType>Code</SubType>
-	  </Compile>
-	  <Compile Update="UILibrary\APButton.xaml.cs">
-	    <SubType>Code</SubType>
-	  </Compile>
-	  <Compile Update="MouseMovementLibraries\GHubSupport\LGDownloader.xaml.cs">
-	    <SubType>Code</SubType>
-	  </Compile>
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Update="Properties\Settings.settings">
-	    <Generator>SettingsSingleFileGenerator</Generator>
-	    <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-	  </None>
-	</ItemGroup>
-
-</Project>
+        // History of DS4 UDP send/receive messages for diagnostics
+        public static ObservableCollection<string> DS4Log { get; } = new ObservableCollection<string>();
+    }
+}
