@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net8.0-windows</TargetFramework>
@@ -32,7 +33,7 @@
 		<PackageReference Include="WPFLocalizeExtension" Version="3.9.4" />
 		<PackageReference Include="WpfScreenHelper" Version="2.1.0" />
 
-		<!-- Local Driver References -->
+		<!-- Driver References -->
 		<Reference Include="FakerInputWrapper">
 			<HintPath>libs\$(Platform)\FakerInputWrapper\FakerInputWrapper.dll</HintPath>
 		</Reference>
@@ -44,6 +45,7 @@
 		</Reference>
 	</ItemGroup>
 
+	<!-- These lines ensure the driver DLLs are in the folder with Spotify.exe -->
 	<ItemGroup>
 		<Content Include="libs\x64\FakerInputWrapper\FakerInputDll.dll">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -61,10 +63,4 @@
 		</Content>
 	</ItemGroup>
 
-	<ItemGroup>
-		<Resource Include="Resources\**\*.png" />
-		<Resource Include="Resources\**\*.ico" />
-		<Resource Include="Resources\**\*.PNG" />
-		<Resource Include="DS4Forms\Themes\*.xaml" />
-	</ItemGroup>
 </Project>
