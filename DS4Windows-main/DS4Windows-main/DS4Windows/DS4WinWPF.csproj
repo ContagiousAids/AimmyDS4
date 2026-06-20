@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net8.0-windows</TargetFramework>
@@ -11,6 +12,12 @@
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<StartupObject>DS4WinWPF.App</StartupObject>
 		<NeutralLanguage>en</NeutralLanguage>
+		<RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+		<EnableNETAnalyzers>false</EnableNETAnalyzers>
+		<ServerGarbageCollection>true</ServerGarbageCollection>
+		<AssemblyVersion>3.5</AssemblyVersion>
+		<FileVersion>3.5</FileVersion>
+		<Version>3.5</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
@@ -31,6 +38,7 @@
 		<PackageReference Include="WPFLocalizeExtension" Version="3.9.4" />
 		<PackageReference Include="WpfScreenHelper" Version="2.1.0" />
 
+		<!-- Driver and Local Library References -->
 		<Reference Include="FakerInputWrapper">
 			<HintPath>libs\$(Platform)\FakerInputWrapper\FakerInputWrapper.dll</HintPath>
 		</Reference>
@@ -42,24 +50,25 @@
 		</Reference>
 	</ItemGroup>
 
-	<!-- ENSURE RESOURCES ARE EMBEDDED -->
+	<!-- FORCE COPIES CRITICAL FILES TO OUTPUT DIRECTORY -->
 	<ItemGroup>
-		<Resource Include="Resources\*.png" />
-		<Resource Include="Resources\*.ico" />
+		<Content Include="libs\x64\FakerInputWrapper\FakerInputDll.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Link>FakerInputDll.dll</Link>
+		</Content>
+		<Content Include="libs\x64\Nefarius.ViGEm.Client\Nefarius.ViGEm.Client.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Link>Nefarius.ViGEm.Client.dll</Link>
+		</Content>
+		<Content Include="NLog.config">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Resource Include="Resources\**\*.png" />
+		<Resource Include="Resources\**\*.ico" />
 		<Resource Include="DS4Forms\Themes\*.xaml" />
 	</ItemGroup>
 
-	<!-- COPY REQUIRED DLLs AND CONFIGS TO OUTPUT -->
-	<ItemGroup>
-		<None Update="libs\x64\FakerInputWrapper\FakerInputDll.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<Link>FakerInputDll.dll</Link>
-		</None>
-		<None Update="NLog.config">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="Changelog.json">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
 </Project>
