@@ -1,3 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
 using Visuality;
 using System.Collections.ObjectModel;
 
