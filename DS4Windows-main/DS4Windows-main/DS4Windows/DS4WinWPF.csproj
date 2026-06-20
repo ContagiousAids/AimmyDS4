@@ -12,12 +12,6 @@
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<StartupObject>DS4WinWPF.App</StartupObject>
 		<NeutralLanguage>en</NeutralLanguage>
-		<RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
-		<EnableNETAnalyzers>false</EnableNETAnalyzers>
-		<ServerGarbageCollection>true</ServerGarbageCollection>
-		<AssemblyVersion>3.5</AssemblyVersion>
-		<FileVersion>3.5</FileVersion>
-		<Version>3.5</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
@@ -26,6 +20,7 @@
 		<PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="5.0.106" />
 		<PackageReference Include="H.NotifyIcon.Wpf" Version="2.0.74" />
 		<PackageReference Include="MdXaml" Version="1.27.0" />
+		<PackageReference Include="AvalonEdit" Version="6.3.0.90" />
 		<PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.106">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -38,7 +33,7 @@
 		<PackageReference Include="WPFLocalizeExtension" Version="3.9.4" />
 		<PackageReference Include="WpfScreenHelper" Version="2.1.0" />
 
-		<!-- Driver and Local Library References -->
+		<!-- Local Driver References -->
 		<Reference Include="FakerInputWrapper">
 			<HintPath>libs\$(Platform)\FakerInputWrapper\FakerInputWrapper.dll</HintPath>
 		</Reference>
@@ -50,7 +45,6 @@
 		</Reference>
 	</ItemGroup>
 
-	<!-- FORCE COPIES CRITICAL FILES TO OUTPUT DIRECTORY -->
 	<ItemGroup>
 		<Content Include="libs\x64\FakerInputWrapper\FakerInputDll.dll">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
