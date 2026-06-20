@@ -30,6 +30,7 @@ namespace InputLogic
 
         public void StartListeningForBinding(string bindingId)
         {
+            Console.WriteLine($"[BIND] Listening for: {bindingId}");
             settingBindingId = bindingId;
             EnsureHookEvents();
         }
@@ -38,11 +39,13 @@ namespace InputLogic
         {
             if (_mEvents == null)
             {
-                _mEvents = Hook.GlobalEvents();
-                _mEvents.KeyDown += (s, e) => GlobalHookKeyDown(e);
-                _mEvents.MouseDown += (s, e) => GlobalHookMouseDown(e);
-                _mEvents.KeyUp += (s, e) => GlobalHookKeyUp(e);
-                _mEvents.MouseUp += (s, e) => GlobalHookMouseUp(e);
+                try {
+                    _mEvents = Hook.GlobalEvents();
+                    _mEvents.KeyDown += (s, e) => GlobalHookKeyDown(e);
+                    _mEvents.MouseDown += (s, e) => GlobalHookMouseDown(e);
+                    _mEvents.KeyUp += (s, e) => GlobalHookKeyUp(e);
+                    _mEvents.MouseUp += (s, e) => GlobalHookMouseUp(e);
+                } catch { Console.WriteLine("[BIND] Global Hook Failed."); }
             }
 
             if (!_gamepadPollerStarted)
@@ -60,9 +63,7 @@ namespace InputLogic
                 OnBindingSet?.Invoke(settingBindingId, key);
                 settingBindingId = null;
             } else {
-                foreach (var b in bindings) {
-                    if (b.Value == key) { isHolding[b.Key] = true; OnBindingPressed?.Invoke(b.Key); }
-                }
+                foreach (var b in bindings) { if (b.Value == key) { isHolding[b.Key] = true; OnBindingPressed?.Invoke(b.Key); } }
             }
         }
 
@@ -74,9 +75,7 @@ namespace InputLogic
                 OnBindingSet?.Invoke(settingBindingId, btn);
                 settingBindingId = null;
             } else {
-                foreach (var b in bindings) {
-                    if (b.Value == btn) { isHolding[b.Key] = true; OnBindingPressed?.Invoke(b.Key); }
-                }
+                foreach (var b in bindings) { if (b.Value == btn) { isHolding[b.Key] = true; OnBindingPressed?.Invoke(b.Key); } }
             }
         }
 
@@ -96,6 +95,7 @@ namespace InputLogic
         {
             if (settingBindingId != null && pressed)
             {
+                Console.WriteLine($"[BIND] Controller Button Detected: {buttonName}");
                 bindings[settingBindingId] = buttonName;
                 OnBindingSet?.Invoke(settingBindingId, buttonName);
                 settingBindingId = null;
@@ -119,7 +119,12 @@ namespace InputLogic
             Task.Run(async () =>
             {
                 var xinput = new XInput();
-                if (!xinput.IsAvailable) return;
+                if (!xinput.IsAvailable) {
+                    Console.WriteLine("[XINPUT] XInput DLL not found. Controller binding will not work.");
+                    return;
+                }
+                Console.WriteLine("[XINPUT] Gamepad Poller Started. Ready to bind buttons.");
+
                 var lastStates = new Dictionary<string, bool>();
                 string[] buttonNames = { "A", "B", "X", "Y", "LB", "RB", "LT", "RT", "LS", "RS", "Start", "Back", "Up", "Down", "Left", "Right" };
                 foreach (var btn in buttonNames) lastStates[btn] = false;
@@ -130,9 +135,10 @@ namespace InputLogic
                     {
                         var currentStates = new Dictionary<string, bool>();
                         foreach (var btn in buttonNames) currentStates[btn] = false;
+
                         for (int i = 0; i < 4; i++)
                         {
-                            if (xinput.GetState(i, out var state) == 0)
+                            if (xinput.GetState(i, out var state) == 0) // 0 means Success
                             {
                                 var b = state.Gamepad.wButtons;
                                 currentStates["A"] |= (b & 0x1000) != 0;
@@ -149,10 +155,11 @@ namespace InputLogic
                                 currentStates["Down"] |= (b & 0x0002) != 0;
                                 currentStates["Left"] |= (b & 0x0004) != 0;
                                 currentStates["Right"] |= (b & 0x0008) != 0;
-                                currentStates["LT"] |= state.Gamepad.bLeftTrigger > 50;
-                                currentStates["RT"] |= state.Gamepad.bRightTrigger > 50;
+                                currentStates["LT"] |= state.Gamepad.bLeftTrigger > 60;
+                                currentStates["RT"] |= state.Gamepad.bRightTrigger > 60;
                             }
                         }
+
                         foreach (var btn in buttonNames)
                         {
                             if (currentStates[btn] != lastStates[btn])
