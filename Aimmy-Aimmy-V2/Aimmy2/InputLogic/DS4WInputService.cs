@@ -11,7 +11,9 @@ namespace InputLogic
         private static IPEndPoint? _endpoint;
         private static uint _packetCounter = 0;
 
-        // Anti-recoil accumulator (persistent across calls — drifts stick downward)
+        // Persistents for smoothing and recoil
+        private static double _lastX = 0.0;
+        private static double _lastY = 0.0;
         private static double _recoilAccumY = 0.0;
 
         static DS4WInputService()
@@ -32,18 +34,6 @@ namespace InputLogic
         public static void SendRightStick(double rawX, double rawY)
         {
             if (_client == null) return;
-
-            try
-            {
-                var debugMsg = $"{DateTime.Now:HH:mm:ss} DEBUG -> SendRightStick rawX={rawX:F2} rawY={rawY:F2}";
-                Console.WriteLine("[DS4W] " + debugMsg);
-                Application.Current?.Dispatcher?.BeginInvoke(new Action(() =>
-                {
-                    Dictionary.DS4Log.Add(debugMsg);
-                    Dictionary.filelocationState["DS4 Last Send"] = debugMsg;
-                }));
-            }
-            catch { }
 
             // Check enabled toggle
             try
@@ -82,7 +72,6 @@ namespace InputLogic
 
             try
             {
-                LogStatus($"{DateTime.Now:HH:mm:ss} SEND -> {_endpoint.Address}:{_endpoint.Port} rawX={rawX:F2} rawY={rawY:F2}", false);
                 // Read user‑configured controller settings
                 double sensX          = GetSlider("Controller Stick Sensitivity X", 0.50);
                 double sensY          = GetSlider("Controller Stick Sensitivity Y", 0.50);
@@ -90,21 +79,39 @@ namespace InputLogic
                 double outerDead      = GetSlider("Controller Outer Deadzone", 0.95);
                 double antiRecoil     = GetSlider("Controller Anti-Recoil Strength", 0.00);
                 double minOutput      = GetSlider("Controller Minimum Output", 0.10);
+                double smoothing      = GetSlider("Controller Stick Smoothing", 0.50);
+                double friction       = GetSlider("Controller Target Friction", 0.20);
 
-                // 1. Apply inner deadzone
+                // 1. Friction: If we are already very close to 0,0 (target center), reduce sensitivity
+                double dist = Math.Sqrt(rawX * rawX + rawY * rawY);
+                if (dist < 0.2) 
+                {
+                    double frictionMult = 1.0 - (friction * (1.0 - (dist / 0.2)));
+                    rawX *= frictionMult;
+                    rawY *= frictionMult;
+                }
+
+                // 2. Apply inner deadzone
                 (rawX, rawY) = ApplyDeadzone(rawX, rawY, innerDead);
 
-                // 2. Apply sensitivity (separate X/Y)
+                // 3. Apply sensitivity (separate X/Y)
                 rawX *= sensX;
                 rawY *= sensY;
 
-                // 3. Clamp to outer deadzone, then re‑normalise to [-1, 1]
+                // 4. Smoothing (EMA)
+                double alpha = 1.0 - Math.Clamp(smoothing, 0.0, 0.95);
+                rawX = (_lastX * (1.0 - alpha)) + (rawX * alpha);
+                rawY = (_lastY * (1.0 - alpha)) + (rawY * alpha);
+                _lastX = rawX;
+                _lastY = rawY;
+
+                // 5. Clamp to outer deadzone, then re‑normalise to [-1, 1]
                 (rawX, rawY) = ClampOuterDeadzone(rawX, rawY, outerDead);
 
-                // 4. Minimum output: if stick is slightly moved, push it past a minimum threshold
+                // 6. Minimum output: if stick is slightly moved, push it past a minimum threshold
                 (rawX, rawY) = ApplyMinimumOutput(rawX, rawY, minOutput);
 
-                // 5. Anti‑recoil: accumulate a small downward pull
+                // 7. Anti‑recoil: accumulate a small downward pull
                 if (antiRecoil > 0.0)
                 {
                     _recoilAccumY += antiRecoil * 0.002;  // small per‑call increment
@@ -123,11 +130,10 @@ namespace InputLogic
                 byte[] packet = BuildPacket(stickX, stickY);
                 try
                 {
-                    Console.WriteLine($"[DS4W] Sending packet to {_endpoint.Address}:{_endpoint.Port} len={packet.Length} counter={_packetCounter}");
                     _client.Send(packet, packet.Length, _endpoint);
                     _packetCounter++;
                     var okMsg = $"{DateTime.Now:HH:mm:ss} OK -> {_endpoint.Address}:{_endpoint.Port} len={packet.Length} cnt={_packetCounter}";
-                    LogStatus(okMsg);
+                    LogStatus(okMsg, false);
                 }
                 catch (Exception ex)
                 {
