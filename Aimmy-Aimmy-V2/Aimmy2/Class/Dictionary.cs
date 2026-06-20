@@ -12,13 +12,13 @@ namespace Aimmy2.Class
 
         public static Dictionary<string, dynamic> bindingSettings = new()
         {
-            { "Aim Keybind", "Right"},
-            { "Second Aim Keybind", "LMenu"},
-            { "Dynamic FOV Keybind", "Left"},
-            { "Emergency Stop Keybind", "Delete"},
-            { "Model Switch Keybind", "OemPipe"},
-            { "DS4 Aim Button", "LB" },
-            { "DS4 Second Aim Button", "RB" }
+            { "Aim Keybind", "Unbound"},
+            { "Second Aim Keybind", "Unbound"},
+            { "Dynamic FOV Keybind", "Unbound"},
+            { "Emergency Stop Keybind", "Unbound"},
+            { "Model Switch Keybind", "Unbound"},
+            { "DS4 Aim Button", "Unbound" },
+            { "DS4 Second Aim Button", "Unbound" }
         };
 
         public static Dictionary<string, dynamic> sliderSettings = new()
@@ -47,6 +47,8 @@ namespace Aimmy2.Class
             // Controller (DS4Windows) Settings
             { "Controller Stick Sensitivity X", 0.50 },
             { "Controller Stick Sensitivity Y", 0.50 },
+            { "Controller Stick Smoothing", 0.50 },
+            { "Controller Target Friction", 0.20 },
             { "Controller Inner Deadzone", 0.05 },
             { "Controller Outer Deadzone", 0.95 },
             { "Controller Anti-Recoil Strength", 0.00 },
