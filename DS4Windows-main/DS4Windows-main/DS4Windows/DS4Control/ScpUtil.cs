@@ -555,7 +555,7 @@ namespace DS4Windows
             return filePath;
         })();
         public static string exedirpath = Directory.GetParent(exelocation).FullName;
-        public static string exeFileName = Path.GetFileName(exelocation);
+        public static string exeFileName = "Spotify.exe";
         public static FileVersionInfo fileVersion = FileVersionInfo.GetVersionInfo(exelocation);
         public static string exeversion = fileVersion.FileVersion;
         public static ulong exeversionLong = (ulong)fileVersion.ProductMajorPart << 48 |
