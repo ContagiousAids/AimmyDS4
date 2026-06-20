@@ -1,10 +1,10 @@
-using Gma.System.MouseKeyHook;
+using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using System;
+using Gma.System.MouseKeyHook;
 
-// Use aliases to prevent ambiguity with WPF
+// Use explicit aliases to stop the "Ambiguous Reference" errors
 using WinForms = System.Windows.Forms;
 using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
 using MouseEventArgs = System.Windows.Forms.MouseEventArgs;
@@ -12,6 +12,7 @@ using MouseEventArgs = System.Windows.Forms.MouseEventArgs;
 namespace InputLogic
 {
     internal class InputBindingManager
+        
     {
         private IKeyboardMouseEvents? _mEvents;
         private readonly Dictionary<string, string> bindings = new();
