@@ -1,7 +1,13 @@
-﻿using Gma.System.MouseKeyHook;
+using Gma.System.MouseKeyHook;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Collections.Generic;
+using System;
+
+// Use aliases to prevent ambiguity
+using WinForms = System.Windows.Forms;
+using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
+using MouseEventArgs = System.Windows.Forms.MouseEventArgs;
 
 namespace InputLogic
 {
