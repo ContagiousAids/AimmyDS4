@@ -1,4 +1,4 @@
-﻿using Aimmy2.UILibrary;
+using Aimmy2.UILibrary;
 using System.Windows.Controls;
 using UILibrary;
 
@@ -113,6 +113,8 @@ namespace Class
         public ATitle? AT_ControllerSettings { get; set; }
         public ASlider? S_ControllerSensX { get; set; }
         public ASlider? S_ControllerSensY { get; set; }
+        public ASlider? S_ControllerSmoothing { get; set; }
+        public ASlider? S_ControllerFriction { get; set; }
         public ASlider? S_ControllerInnerDeadzone { get; set; }
         public ASlider? S_ControllerOuterDeadzone { get; set; }
         public ASlider? S_ControllerAntiRecoil { get; set; }
