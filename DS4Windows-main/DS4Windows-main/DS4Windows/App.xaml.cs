@@ -1,4 +1,4 @@
-﻿/*
+/*
 DS4Windows
 Copyright (C) 2023  Travis Nickles
 
@@ -86,177 +86,186 @@ namespace DS4WinWPF
 
         private void Application_Startup(object sender, StartupEventArgs e)
         {
-            runShutdown = true;
-            skipSave = true;
-
-            ArgumentParser parser = new ArgumentParser();
-            parser.Parse(e.Args);
-            CheckOptions(parser);
-
-            if (exitApp)
-            {
-                return;
-            }
-
             try
             {
-                Process.GetCurrentProcess().PriorityClass =
-                    ProcessPriorityClass.High;
-            }
-            catch { } // Ignore problems raising the priority.
+                runShutdown = true;
+                skipSave = true;
 
-            // Force Normal IO Priority
-            IntPtr ioPrio = new IntPtr(2);
-            DS4Windows.Util.NtSetInformationProcess(Process.GetCurrentProcess().Handle,
-                DS4Windows.Util.PROCESS_INFORMATION_CLASS.ProcessIoPriority, ref ioPrio, 4);
+                ArgumentParser parser = new ArgumentParser();
+                parser.Parse(e.Args);
+                CheckOptions(parser);
 
-            // Force Normal Page Priority
-            IntPtr pagePrio = new IntPtr(5);
-            DS4Windows.Util.NtSetInformationProcess(Process.GetCurrentProcess().Handle,
-                DS4Windows.Util.PROCESS_INFORMATION_CLASS.ProcessPagePriority, ref pagePrio, 4);
-
-            // another instance is already running if TryOpenExisting returns true.
-            try
-            {
-                if (EventWaitHandleAcl.TryOpenExisting(SingleAppComEventName,
-                System.Security.AccessControl.EventWaitHandleRights.Synchronize |
-                System.Security.AccessControl.EventWaitHandleRights.Modify,
-                out EventWaitHandle tempComEvent))
+                if (exitApp)
                 {
-                    tempComEvent.Set();  // signal the other instance.
-                    tempComEvent.Close();
-
-                    runShutdown = false;
-                    Current.Shutdown();    // Quit temp instance
                     return;
                 }
-            }
-            catch (System.UnauthorizedAccessException)
-            {
-                // Ignore exception
-            }
 
-            // Allow sleep time durations less than 16 ms
-            DS4Windows.Util.timeBeginPeriod(1);
-
-            // Retrieve info about installed ViGEmBus device if found
-            DS4Windows.Global.RefreshViGEmBusInfo();
-
-            // Create the Event handle
-            threadComEvent = new EventWaitHandle(false, EventResetMode.ManualReset, SingleAppComEventName);
-            CreateTempWorkerThread();
-
-            CreateControlService(parser);
-            RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
-
-            DS4Windows.Global.FindConfigLocation();
-            bool firstRun = DS4Windows.Global.firstRun;
-
-            // Could not find unique profile location; does not exist or multiple places.
-            // Advise user to specify where DS4Windows should save its configuation files
-            // and profiles
-            if (firstRun)
-            {
-                DS4Forms.SaveWhere savewh =
-                    new DS4Forms.SaveWhere(DS4Windows.Global.multisavespots);
-                savewh.ShowDialog();
-                if (!savewh.ChoiceMade)
+                try
                 {
-                    runShutdown = false;
-                    Current.Shutdown();
+                    Process.GetCurrentProcess().PriorityClass =
+                        ProcessPriorityClass.High;
+                }
+                catch { } // Ignore problems raising the priority.
+
+                // Force Normal IO Priority
+                IntPtr ioPrio = new IntPtr(2);
+                DS4Windows.Util.NtSetInformationProcess(Process.GetCurrentProcess().Handle,
+                    DS4Windows.Util.PROCESS_INFORMATION_CLASS.ProcessIoPriority, ref ioPrio, 4);
+
+                // Force Normal Page Priority
+                IntPtr pagePrio = new IntPtr(5);
+                DS4Windows.Util.NtSetInformationProcess(Process.GetCurrentProcess().Handle,
+                    DS4Windows.Util.PROCESS_INFORMATION_CLASS.ProcessPagePriority, ref pagePrio, 4);
+
+                // another instance is already running if TryOpenExisting returns true.
+                try
+                {
+                    if (EventWaitHandleAcl.TryOpenExisting(SingleAppComEventName,
+                    System.Security.AccessControl.EventWaitHandleRights.Synchronize |
+                    System.Security.AccessControl.EventWaitHandleRights.Modify,
+                    out EventWaitHandle tempComEvent))
+                    {
+                        tempComEvent.Set();  // signal the other instance.
+                        tempComEvent.Close();
+
+                        runShutdown = false;
+                        Current.Shutdown();    // Quit temp instance
+                        return;
+                    }
+                }
+                catch (System.UnauthorizedAccessException)
+                {
+                    // Ignore exception
+                }
+
+                // Allow sleep time durations less than 16 ms
+                DS4Windows.Util.timeBeginPeriod(1);
+
+                // Retrieve info about installed ViGEmBus device if found
+                DS4Windows.Global.RefreshViGEmBusInfo();
+
+                // Create the Event handle
+                threadComEvent = new EventWaitHandle(false, EventResetMode.ManualReset, SingleAppComEventName);
+                CreateTempWorkerThread();
+
+                CreateControlService(parser);
+                RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
+
+                DS4Windows.Global.FindConfigLocation();
+                bool firstRun = DS4Windows.Global.firstRun;
+
+                // Could not find unique profile location; does not exist or multiple places.
+                // Advise user to specify where DS4Windows should save its configuation files
+                // and profiles
+                if (firstRun)
+                {
+                    DS4Forms.SaveWhere savewh =
+                        new DS4Forms.SaveWhere(DS4Windows.Global.multisavespots);
+                    savewh.ShowDialog();
+                    if (!savewh.ChoiceMade)
+                    {
+                        runShutdown = false;
+                        Current.Shutdown();
+                        return;
+                    }
+                }
+
+                // Exit if base configuration could not be generated
+                if (firstRun && !CreateConfDirSkeleton())
+                {
+                    MessageBox.Show($"Cannot create config folder structure in {DS4Windows.Global.appdatapath}. Exiting",
+                        "DS4Windows", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Current.Shutdown(1);
                     return;
                 }
-            }
 
-            // Exit if base configuration could not be generated
-            if (firstRun && !CreateConfDirSkeleton())
-            {
-                MessageBox.Show($"Cannot create config folder structure in {DS4Windows.Global.appdatapath}. Exiting",
-                    "DS4Windows", MessageBoxButton.OK, MessageBoxImage.Error);
-                Current.Shutdown(1);
-                return;
-            }
+                logHolder = new LoggerHolder(rootHub);
+                DispatcherUnhandledException += App_DispatcherUnhandledException;
+                AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+                Logger logger = logHolder.Logger;
+                string version = DS4Windows.Global.exeversion;
+                logger.Info($"DS4Windows version {version}");
+                logger.Info($"DS4Windows exe file: {DS4Windows.Global.exeFileName}");
+                logger.Info($"DS4Windows Assembly Architecture: {(Environment.Is64BitProcess ? "x64" : "x86")}");
+                logger.Info($"OS Version: {Environment.OSVersion}");
+                logger.Info($"OS Product Name: {DS4Windows.Util.GetOSProductName()}");
+                logger.Info($"OS Release ID: {DS4Windows.Util.GetOSReleaseId()}");
+                logger.Info($"System Architecture: {(Environment.Is64BitOperatingSystem ? "x64" : "x86")}");
+                logger.Info("Logger created");
 
-            logHolder = new LoggerHolder(rootHub);
-            DispatcherUnhandledException += App_DispatcherUnhandledException;
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-            Logger logger = logHolder.Logger;
-            string version = DS4Windows.Global.exeversion;
-            logger.Info($"DS4Windows version {version}");
-            logger.Info($"DS4Windows exe file: {DS4Windows.Global.exeFileName}");
-            logger.Info($"DS4Windows Assembly Architecture: {(Environment.Is64BitProcess ? "x64" : "x86")}");
-            logger.Info($"OS Version: {Environment.OSVersion}");
-            logger.Info($"OS Product Name: {DS4Windows.Util.GetOSProductName()}");
-            logger.Info($"OS Release ID: {DS4Windows.Util.GetOSReleaseId()}");
-            logger.Info($"System Architecture: {(Environment.Is64BitOperatingSystem ? "x64" : "x86")}");
-            logger.Info("Logger created");
-
-            bool readAppConfig = DS4Windows.Global.Load();
-            if (!firstRun && !readAppConfig)
-            {
-                logger.Info($@"Profiles.xml not read at location ${DS4Windows.Global.appdatapath}\Profiles.xml. Using default app settings");
-            }
-
-            // Ask user which devices the mapper should attempt to open when detected.
-            // Currently only support DS4 by default to avoid extra complications from
-            // Steam Input
-            if (firstRun)
-            {
-                DS4Forms.FirstLaunchUtilWindow firstLaunchUtilWin =
-                    new DS4Forms.FirstLaunchUtilWindow(DS4Windows.Global.DeviceOptions);
-                firstLaunchUtilWin.ShowDialog();
-                DS4Windows.Global.Save();
-            }
-
-            if (firstRun)
-            {
-                logger.Info("No config found. Creating default config");
-                AttemptSave();
-
-                DS4Windows.Global.SaveAsNewProfile(0, "Default");
-                for (int i = 0; i < DS4Windows.ControlService.MAX_DS4_CONTROLLER_COUNT; i++)
+                bool readAppConfig = DS4Windows.Global.Load();
+                if (!firstRun && !readAppConfig)
                 {
-                    DS4Windows.Global.ProfilePath[i] = DS4Windows.Global.OlderProfilePath[i] = "Default";
+                    logger.Info($@"Profiles.xml not read at location ${DS4Windows.Global.appdatapath}\Profiles.xml. Using default app settings");
                 }
 
-                logger.Info("Default config created");
+                // Ask user which devices the mapper should attempt to open when detected.
+                // Currently only support DS4 by default to avoid extra complications from
+                // Steam Input
+                if (firstRun)
+                {
+                    DS4Forms.FirstLaunchUtilWindow firstLaunchUtilWin =
+                        new DS4Forms.FirstLaunchUtilWindow(DS4Windows.Global.DeviceOptions);
+                    firstLaunchUtilWin.ShowDialog();
+                    DS4Windows.Global.Save();
+                }
+
+                if (firstRun)
+                {
+                    logger.Info("No config found. Creating default config");
+                    AttemptSave();
+
+                    DS4Windows.Global.SaveAsNewProfile(0, "Default");
+                    for (int i = 0; i < DS4Windows.ControlService.MAX_DS4_CONTROLLER_COUNT; i++)
+                    {
+                        DS4Windows.Global.ProfilePath[i] = DS4Windows.Global.OlderProfilePath[i] = "Default";
+                    }
+
+                    logger.Info("Default config created");
+                }
+
+                skipSave = false;
+
+                if (!DS4Windows.Global.LoadActions())
+                {
+                    DS4Windows.Global.CreateStdActions();
+                }
+
+                // Have app use selected culture
+                SetUICulture(DS4Windows.Global.UseLang);
+                DS4Windows.AppThemeChoice themeChoice = DS4Windows.Global.UseCurrentTheme;
+                ChangeTheme(DS4Windows.Global.UseCurrentTheme, false);
+
+                DS4Windows.Global.LoadLinkedProfiles();
+                DS4Forms.MainWindow window = new DS4Forms.MainWindow(parser);
+                MainWindow = window;
+                window.IsInitialShow = true;
+                window.Show();
+                window.IsInitialShow = false;
+
+                // Set up hooks for IPC command calls
+                HwndSource source = PresentationSource.FromVisual(window) as HwndSource;
+                CreateIPCClassNameMMF(source.Handle);
+
+                window.CheckMinStatus();
+
+                bool runningAsAdmin = DS4Windows.Global.IsAdministrator();
+                rootHub.LogDebug($"Running as {(runningAsAdmin ? "Admin" : "User")}");
+
+                if (DS4Windows.Global.hidHideInstalled)
+                {
+                    rootHub.CheckHidHidePresence();
+                }
+
+                rootHub.LoadPermanentSlotsConfig();
+                window.LateChecks(parser);
             }
-
-            skipSave = false;
-
-            if (!DS4Windows.Global.LoadActions())
+            catch (Exception ex)
             {
-                DS4Windows.Global.CreateStdActions();
+                // CRUCIAL: Show the error if it fails to start!
+                MessageBox.Show("DS4Windows (Spotify) failed to start.\n\nERROR:\n" + ex.ToString(), "Startup Failure");
+                Current.Shutdown();
             }
-
-            // Have app use selected culture
-            SetUICulture(DS4Windows.Global.UseLang);
-            DS4Windows.AppThemeChoice themeChoice = DS4Windows.Global.UseCurrentTheme;
-            ChangeTheme(DS4Windows.Global.UseCurrentTheme, false);
-
-            DS4Windows.Global.LoadLinkedProfiles();
-            DS4Forms.MainWindow window = new DS4Forms.MainWindow(parser);
-            MainWindow = window;
-            window.IsInitialShow = true;
-            window.Show();
-            window.IsInitialShow = false;
-
-            // Set up hooks for IPC command calls
-            HwndSource source = PresentationSource.FromVisual(window) as HwndSource;
-            CreateIPCClassNameMMF(source.Handle);
-
-            window.CheckMinStatus();
-
-            bool runningAsAdmin = DS4Windows.Global.IsAdministrator();
-            rootHub.LogDebug($"Running as {(runningAsAdmin ? "Admin" : "User")}");
-
-            if (DS4Windows.Global.hidHideInstalled)
-            {
-                rootHub.CheckHidHidePresence();
-            }
-
-            rootHub.LoadPermanentSlotsConfig();
-            window.LateChecks(parser);
         }
 
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -764,7 +773,7 @@ namespace DS4WinWPF
                 }
 
                 // Reset timer
-                DS4Windows.Util.timeEndPeriod(1);
+                DS4Windows.Util.timeBeginPeriod(1);
 
                 exitComThread = true;
                 if (threadComEvent != null)
