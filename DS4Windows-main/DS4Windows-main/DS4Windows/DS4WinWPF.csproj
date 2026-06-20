@@ -31,7 +31,6 @@
 		<PackageReference Include="WPFLocalizeExtension" Version="3.9.4" />
 		<PackageReference Include="WpfScreenHelper" Version="2.1.0" />
 
-		<!-- Local Driver References -->
 		<Reference Include="FakerInputWrapper">
 			<HintPath>libs\$(Platform)\FakerInputWrapper\FakerInputWrapper.dll</HintPath>
 		</Reference>
@@ -43,10 +42,24 @@
 		</Reference>
 	</ItemGroup>
 
+	<!-- ENSURE RESOURCES ARE EMBEDDED -->
 	<ItemGroup>
-		<None Include="Resources\*.png" />
-		<None Include="Resources\*.ico" />
 		<Resource Include="Resources\*.png" />
 		<Resource Include="Resources\*.ico" />
+		<Resource Include="DS4Forms\Themes\*.xaml" />
+	</ItemGroup>
+
+	<!-- COPY REQUIRED DLLs AND CONFIGS TO OUTPUT -->
+	<ItemGroup>
+		<None Update="libs\x64\FakerInputWrapper\FakerInputDll.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<Link>FakerInputDll.dll</Link>
+		</None>
+		<None Update="NLog.config">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Changelog.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 </Project>
